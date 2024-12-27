@@ -1,7 +1,12 @@
-# viz_scout
+<h1 align="center">
+  <img src="logo.webp" width="250" height="250" alt="VizScout">
+</h1>
 
 
-**viz_scout** is a Python package for advanced image data analysis and correction. It provides utilities for detecting and analyzing image quality, identifying duplicates, checking for corrupt images, and generating exploratory data analysis (EDA) reports on datasets. The package is designed to handle datasets stored locally, in AWS S3, or MinIO for large-scale data processing.
+# VizScout
+
+
+**VizScout** is a Python package for advanced image data analysis and correction. It provides utilities for detecting and analyzing image quality, identifying duplicates, checking for corrupt images, and generating exploratory data analysis (EDA) reports on datasets. The package is designed to handle datasets stored locally, in AWS S3, or MinIO for large-scale data processing.
 
 
 ---
