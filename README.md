@@ -84,7 +84,7 @@ from viz_scout import EDAReport
 # Initialize the EDA report generator for a local dataset
 eda = EDAReport(
     dataset_path="path/to/dataset",
-    corrupt_check=True,
+    duplicate_check=True,
     blur_threshold=5
 )
 
@@ -118,7 +118,7 @@ eda = EDAReport(
         "secret_key": "your-secret-key",
         "region": "your-region",
     },
-    corrupt_check=True,
+    duplicate_check=True,
     blur_threshold=5
 )
 
@@ -143,7 +143,7 @@ eda = EDAReport(
         "access_key": "your-access-key",
         "secret_key": "your-secret-key",
     },
-    corrupt_check=True,
+    duplicate_check=True,
     blur_threshold=5
 )
 

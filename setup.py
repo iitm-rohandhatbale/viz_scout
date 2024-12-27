@@ -9,8 +9,8 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/iitm-rohandhatbale/viz_scout",  # Your GitHub repo URL
-    packages=find_packages(where="viz_scout"),  # Automatically find packages in src/
-    package_dir={"": "viz_scout"},  # Root directory for packages
+    packages=find_packages(),  # Automatically find packages in src/
+    # package_dir={"": "viz_scout"},  # Root directory for packages
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
@@ -26,5 +26,5 @@ setup(
         "minio",
         "imagededup",
         "icecream"
-    ],
+    ]
 )

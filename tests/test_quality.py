@@ -6,7 +6,7 @@ from icecream import ic
 from viz_scout.quality import ImageQualityAnalyzer
 
 def test_image_quality_analyzer():
-    image_path = "test_datasets/coco5/000000000049.jpg"
+    image_path = "sample_datasets/coco5/000000000049.jpg"
 
     quality_analyzer = ImageQualityAnalyzer()
 
