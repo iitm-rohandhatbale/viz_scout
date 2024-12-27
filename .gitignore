@@ -11,6 +11,9 @@ nohup.out
 __pycache__
 .ipynb_checkpoints
 trial_notebooks
+build
+dist
+.egg-info
 
 
 # Node artifact files
