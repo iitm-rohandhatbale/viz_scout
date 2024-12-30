@@ -1,3 +1,28 @@
+Metadata-Version: 2.1
+Name: viz_scout
+Version: 0.2.1
+Summary: A Python toolkit for end-to-end image analysis with cloud (Minio, S3) support.
+Home-page: https://github.com/iitm-rohandhatbale/viz_scout
+Author: Rohan Dhatbale
+Author-email: rohandhatbale@gmail.com
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: opencv-python
+Requires-Dist: numpy
+Requires-Dist: tqdm
+Requires-Dist: pillow
+Requires-Dist: boto3
+Requires-Dist: minio
+Requires-Dist: imagededup
+Requires-Dist: icecream
+Requires-Dist: altair
+Requires-Dist: pandas
+Requires-Dist: vl-convert-python
+
 <h1 align="center">
   <img src="logo.webp" width="250" height="250" alt="VizScout">
 </h1>
@@ -187,38 +212,6 @@ print(json.dumps(report, indent=4))
 eda.save_report(report, output_path="large_dataset_eda_report.json")
 ```
 
-
-```python
-
-from viz_scout import EDAPlots
-
-plot_generator = EDAPlots(
-        dataset_path="path/to/image/dataset")
-    
-save_dir = "path/to/save/plots"
-
-img_size_distribution = plot_generator.get_image_size_distribution()
-# img_size_distribution.plot()
-img_size_distribution.save(
-    save_dir=save_dir, 
-    file_name="img_size_distribution",
-    file_format="png"
-    )
-
-aspect_ratio_distribution = plot_generator.get_aspect_ratio_distribution()
-aspect_ratio_distribution.save(
-    save_dir=save_dir, 
-    file_name="aspect_ratio_distribution", 
-    file_format="pdf"
-    )
-
-width_height_correlation = plot_generator.get_width_height_correlation()
-width_height_correlation.save(
-    save_dir=save_dir,
-    file_name="width_height_correlation",
-    file_format="html"
-)
-```
 
 ## Key Functions and Methods
 
