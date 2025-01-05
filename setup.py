@@ -1,16 +1,15 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="viz_scout",  # Replace with your package name
-    version="0.1.1",  # Initial version
+    name="viz_scout",  
+    version="0.2.1",  
     author="Rohan Dhatbale",
     author_email="rohandhatbale@gmail.com",
     description="A Python toolkit for end-to-end image analysis with cloud (Minio, S3) support.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/iitm-rohandhatbale/viz_scout",  # Your GitHub repo URL
-    packages=find_packages(),  # Automatically find packages in src/
-    # package_dir={"": "viz_scout"},  # Root directory for packages
+    url="https://github.com/iitm-rohandhatbale/viz_scout",  
+    packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
@@ -25,6 +24,9 @@ setup(
         "boto3",
         "minio",
         "imagededup",
-        "icecream"
+        "icecream", 
+        "altair",
+        "pandas",
+        "vl-convert-python"
     ]
 )

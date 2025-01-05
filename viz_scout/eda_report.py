@@ -1,10 +1,10 @@
 import os
 import json
 import logging
+import pandas as pd
 from tqdm import tqdm
 from PIL import Image
 from concurrent.futures import ThreadPoolExecutor
-from .duplicates import DuplicateDetector
 from .corruption import CorruptionDetector
 from .quality import ImageQualityAnalyzer
 from .dataset import DatasetLoader
@@ -35,6 +35,7 @@ class EDAReport:
         self.blur_threshold = blur_threshold
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.data_df = None
 
         # Load the dataset
         logging.info(f"Loading dataset from {self.dataset_path}...")
@@ -72,7 +73,10 @@ class EDAReport:
             "dataset_stats": dataset_stats,
             "image_stats": image_stats
         }
+        
+        self.data_df = pd.DataFrame(image_stats)
         logging.info("EDA report generation completed.")
+        
         return report
 
     def _get_dataset_stats(self):
@@ -105,6 +109,7 @@ class EDAReport:
         # Check for duplicate images
         exact_duplicate_images, near_duplicate_images = None, None
         if self.duplicate_check is True:
+            from .duplicates import DuplicateDetector
             duplicate_detector = DuplicateDetector(images=self.images)
             exact_duplicate_images = duplicate_detector.get_exact_duplicates()
             near_duplicate_images = duplicate_detector.get_near_duplicates()

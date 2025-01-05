@@ -10,3 +10,6 @@ tqdm
 imagededup
 pytest
 icecream
+altair
+pandas
+vl-convert-python
