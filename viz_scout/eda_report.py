@@ -38,7 +38,7 @@ class EDAReport:
         # Load the dataset
         ic(f"Loading dataset from {self.dataset_path}...")
         self.loader = DatasetLoader(dataset_path, minio_config, s3_config)
-        self.images: dict = self.loader.load_images()
+        self.images, self.corrupt_images = self.loader.load_images()
         ic(f"Loaded {len(self.images)} images.")
 
         # Initialize necessary detectors
@@ -58,7 +58,7 @@ class EDAReport:
         dataset_stats = self._get_dataset_stats()
         image_stats = []
 
-        if len(self.images) < 1000:
+        if len(self.images) < 100:
             ic("Processing image-level statistics sequentially...")
             # Image-level statistics with sequential processing
             image_stats = self._get_image_stats()
@@ -87,7 +87,6 @@ class EDAReport:
         """
         num_images = len(self.images)
         file_formats = set()
-        corrupt_images = 0
 
         # Loop through images and gather stats
         for img_meta in self.images.items():
@@ -96,10 +95,6 @@ class EDAReport:
                 # Image format
                 img_format = os.path.basename(img_path).split('.')[-1]
                 file_formats.add(img_format)
-
-                # # Check if the image is corrupt
-                if self.corruption_detector.is_corrupt(img_stream):
-                    corrupt_images += 1
 
             except Exception as e:
                 ic(f"Error processing image {img_path}: {str(e)}")
@@ -115,7 +110,7 @@ class EDAReport:
         return {
             "num_images": num_images,
             "file_formats": list(file_formats),
-            "corrupt_images": corrupt_images,
+            "corrupt_images": self.corrupt_images,
             "exact_duplicate_images": exact_duplicate_images,
             "near_duplicate_images": near_duplicate_images
         }

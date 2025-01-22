@@ -24,7 +24,7 @@ class DatasetLoader:
         self.s3_config = s3_config
         self.corruption_detcetor = CorruptionDetector()
 
-    def _load_from_local(self) -> dict:
+    def _load_from_local(self) -> tuple:
 
         def load_file(file):
             with open(file, "rb") as f:
@@ -47,13 +47,23 @@ class DatasetLoader:
                 os.path.join(self.source, file): load_file(os.path.join(self.source, file))
                 for file in image_files if not self.corruption_detcetor.is_corrupt(os.path.join(self.source, file))
             }
+            
+            images = {}
+            corrupt_images = []
+            for file in image_files:
+                if not self.corruption_detcetor.is_corrupt(os.path.join(self.source, file)):
+                    images[os.path.join(self.source, file)] = load_file(
+                        os.path.join(self.source, file))
+                else:
+                    corrupt_images.append(os.path.join(self.source, file))
+                
             ic(f"Successfully loaded {len(images)} images from local directory.")
-            return images
+            return (images, corrupt_images)
         except Exception as e:
             ic(f"Error loading images from local directory: {e}")
             raise
 
-    def _load_from_s3(self) -> dict:
+    def _load_from_s3(self) -> tuple:
         try:
             if not self.s3_config:
                 raise ValueError("S3 configuration is required for loading from S3.")
@@ -71,17 +81,20 @@ class DatasetLoader:
             ic(f"Listing objects in S3 bucket: {bucket}")
             objects = s3.list_objects_v2(Bucket=bucket).get("Contents", [])
             files = {}
-
+            corrupt_files = []
             for obj in tqdm(objects, desc="Streaming images from S3"):
                 key = obj["Key"]
-                if key.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
-                    # Stream the file directly from S3
-                    file_stream = BytesIO()
-                    s3.download_fileobj(bucket, key, file_stream)
-                    file_stream.seek(0)
-                    files[key] = file_stream
+                try:
+                    if key.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
+                        # Stream the file directly from S3
+                        file_stream = BytesIO()
+                        s3.download_fileobj(bucket, key, file_stream)
+                        file_stream.seek(0)
+                        files[key] = file_stream
+                except Exception as e:
+                    corrupt_files.append(key)
             ic(f"Successfully loaded {len(files)} images from S3 bucket.")
-            return files
+            return (files, corrupt_files)
         except Exception as e:
             ic(f"Error loading images from S3: {e}")
             raise
@@ -114,7 +127,7 @@ class DatasetLoader:
                     files[key] = file_stream
 
             ic(f"Successfully loaded {len(files)} images from MinIO bucket.")
-            return files
+            return (files, None)
         except Exception as e:
             ic(f"Error loading images from MinIO: {e}")
             raise

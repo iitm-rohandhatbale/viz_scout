@@ -13,13 +13,12 @@ if __name__ == "__main__":
     #     index = random.randint(0, len(data)-1)
     #     data[index] = 0xFF
     
-    # with open("/Users/rohandhatbale/office_work/viz_scout/sample_datasets/coco20/rohan.jpg", "wb") as f:
+    # with open("/Users/rohandhatbale/office_work/viz_scout/sample_datasets/coco5/rohan.jpg", "wb") as f:
     #     pass
         
     
     
     from tests.test_duplicates import test_get_exact_duplicates
-    
     test_get_exact_duplicates()
     #
     # from tests.test_dataset import test_dataset_loader

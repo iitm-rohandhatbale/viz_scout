@@ -24,7 +24,7 @@ class DuplicateDetector:
             self.images: dict = images  # {image_path: image_stream}
 
         if dataset_path:
-            self.images = DatasetLoader(source=dataset_path, s3_config=s3_config,
+            self.images, _ = DatasetLoader(source=dataset_path, s3_config=s3_config,
                                         minio_config=minio_config).load_images()
         self.img_inc_dict = None
         self.exact_duplicates_dict = None

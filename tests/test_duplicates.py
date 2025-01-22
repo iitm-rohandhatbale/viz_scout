@@ -12,3 +12,4 @@ def test_get_exact_duplicates():
     ic.enable()
     ic(exact_duplicates)
     ic(near_duplicates)
+    ic.disable()
