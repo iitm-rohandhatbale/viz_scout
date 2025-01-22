@@ -1,15 +1,13 @@
 import os
 import json
-import logging
 import pandas as pd
+from icecream import ic
 from tqdm import tqdm
 from PIL import Image
 from concurrent.futures import ThreadPoolExecutor
 from .corruption import CorruptionDetector
 from .quality import ImageQualityAnalyzer
 from .dataset import DatasetLoader
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class EDAReport:
@@ -38,10 +36,10 @@ class EDAReport:
         self.data_df = None
 
         # Load the dataset
-        logging.info(f"Loading dataset from {self.dataset_path}...")
+        ic(f"Loading dataset from {self.dataset_path}...")
         self.loader = DatasetLoader(dataset_path, minio_config, s3_config)
         self.images: dict = self.loader.load_images()
-        logging.info(f"Loaded {len(self.images)} images.")
+        ic(f"Loaded {len(self.images)} images.")
 
         # Initialize necessary detectors
         self.quality_analyzer = ImageQualityAnalyzer()
@@ -55,17 +53,17 @@ class EDAReport:
         Returns:
             dict: A dictionary containing dataset and image-level statistics.
         """
-        logging.info("Generating dataset-level statistics...")
+        ic("Generating dataset-level statistics...")
         # Dataset-level statistics
         dataset_stats = self._get_dataset_stats()
         image_stats = []
 
         if len(self.images) < 1000:
-            logging.info("Processing image-level statistics sequentially...")
+            ic("Processing image-level statistics sequentially...")
             # Image-level statistics with sequential processing
             image_stats = self._get_image_stats()
         else:
-            logging.info("Processing image-level statistics in parallel...")
+            ic("Processing image-level statistics in parallel...")
             # Image-level statistics with parallel processing
             image_stats = self._get_image_stats_parallel()
 
@@ -75,7 +73,7 @@ class EDAReport:
         }
         
         self.data_df = pd.DataFrame(image_stats)
-        logging.info("EDA report generation completed.")
+        ic("EDA report generation completed.")
         
         return report
 
@@ -104,7 +102,7 @@ class EDAReport:
                     corrupt_images += 1
 
             except Exception as e:
-                logging.error(f"Error processing image {img_path}: {str(e)}")
+                ic(f"Error processing image {img_path}: {str(e)}")
 
         # Check for duplicate images
         exact_duplicate_images, near_duplicate_images = None, None
@@ -227,6 +225,6 @@ class EDAReport:
         try:
             with open(output_path, 'w') as f:
                 json.dump(report, f, indent=4)
-            logging.info(f"Report saved to {output_path}")
+            ic(f"Report saved to {output_path}")
         except Exception as e:
-            logging.error(f"Error saving report to {output_path}: {str(e)}")
+            ic(f"Error saving report to {output_path}: {str(e)}")

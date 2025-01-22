@@ -1,6 +1,6 @@
 import cv2
+from icecream import ic
 import numpy as np
-import logging
 from .utils import ImageLoader, normalize_score
 
 
@@ -23,7 +23,7 @@ class ImageQualityAnalyzer:
             brightness = np.mean(grayscale)
             return normalize_score(brightness, min_value, max_value)
         except Exception as e:
-            logging.error(f"Error calculating brightness score: {e}")
+            ic(f"Error calculating brightness score: {e}")
             raise
 
     def darkness_score(self, input_data, min_value=0, max_value=255):
@@ -37,7 +37,7 @@ class ImageQualityAnalyzer:
         try:
             return 10 - self.brightness_score(input_data, min_value, max_value)
         except Exception as e:
-            logging.error(f"Error calculating darkness score: {e}")
+            ic(f"Error calculating darkness score: {e}")
             raise
 
     @staticmethod
@@ -55,7 +55,7 @@ class ImageQualityAnalyzer:
             blur_variance = cv2.Laplacian(grayscale, cv2.CV_64F).var()
             return normalize_score(blur_variance, min_value, max_value)
         except Exception as e:
-            logging.error(f"Error calculating blur score: {e}")
+            ic(f"Error calculating blur score: {e}")
             raise
 
     @staticmethod
@@ -73,16 +73,16 @@ class ImageQualityAnalyzer:
             variance = np.var(grayscale)
             return normalize_score(variance, min_value, max_value)
         except Exception as e:
-            logging.error(f"Error calculating uniformity score: {e}")
+            ic(f"Error calculating uniformity score: {e}")
             raise
 
     @staticmethod
     def filter_images(images, score_function, threshold):
         try:
-            logging.info(f"Filtering images with threshold: {threshold}...")
+            ic(f"Filtering images with threshold: {threshold}...")
             return [img for img in images if score_function(img) > threshold]
         except Exception as e:
-            logging.error(f"Error filtering images: {e}")
+            ic(f"Error filtering images: {e}")
             raise
 
     def get_bright_images(self, images, threshold=8):

@@ -1,8 +1,8 @@
 import os
 import json
 import io
-import logging
 from re import S
+from icecream import ic
 
 import pandas as pd
 import numpy as np
@@ -10,8 +10,6 @@ import altair as alt
 
 from .eda_report import EDAReport
 from .dataset import DatasetLoader
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class ChartBase:
@@ -41,7 +39,7 @@ class ChartBase:
         else:
             self.chart.save(file_savepath)
             
-        logging.info(f"Chart/Plot saved successfully at {file_savepath}")
+        ic(f"Chart/Plot saved successfully at {file_savepath}")
     
 
 
@@ -68,11 +66,11 @@ class EDAPlots:
         report_generator = EDAReport(dataset_path=self.dataset_path, duplicate_check=False)
         image_stats = None
         if len(report_generator.images) < 1000:
-            logging.info("Processing image-level statistics sequentially...")
+            ic("Processing image-level statistics sequentially...")
             # Image-level statistics with sequential processing
             image_stats = report_generator._get_image_stats()
         else:
-            logging.info("Processing image-level statistics in parallel...")
+            ic("Processing image-level statistics in parallel...")
             # Image-level statistics with parallel processing
             image_stats = report_generator._get_image_stats_parallel()
             

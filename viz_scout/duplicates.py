@@ -1,5 +1,7 @@
 import numpy as np
 import logging
+import warnings
+warnings.filterwarnings('ignore')
 
 from icecream import ic
 from tqdm import tqdm
@@ -8,9 +10,7 @@ from imagededup.methods import DHash, CNN
 from concurrent.futures import ThreadPoolExecutor
 from .dataset import DatasetLoader
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logging.info("Logging initialized for duplicates")
-
+ic.disable()
 
 class DuplicateDetector:
     def __init__(self, images=None, dataset_path=None, minio_config=None, s3_config=None):
@@ -26,10 +26,11 @@ class DuplicateDetector:
         if dataset_path:
             self.images = DatasetLoader(source=dataset_path, s3_config=s3_config,
                                         minio_config=minio_config).load_images()
-        ic(self.images)
         self.img_inc_dict = None
         self.exact_duplicates_dict = None
-        logging.info(f"Duplicate Detector initialized with {len(self.images)} images.")
+        self.cnn_encoder = CNN()
+        self.cnn_encoder.logger.setLevel(logging.CRITICAL)
+        ic(f"Duplicate Detector initialized with {len(self.images)} images.")
 
     def get_exact_duplicates(self) -> dict:
         """
@@ -38,16 +39,17 @@ class DuplicateDetector:
         if self.exact_duplicates_dict is not None:
             return self.exact_duplicates_dict
 
-        logging.info("Starting exact duplicate detection...")
+        ic("Starting exact duplicate detection...")
         self.img_inc_dict = self._generate_img_enc()
-        logging.info(f"Generated encodings for {len(self.img_inc_dict)} images.")
+        ic(f"Generated encodings for {len(self.img_inc_dict)} images.")
 
-        hasher = CNN()
-        raw_exact_duplicates_dict = hasher.find_duplicates(encoding_map=self.img_inc_dict,
+        # hasher = CNN()
+        # hasher.logger.setLevel(logging.CRITICAL)
+        raw_exact_duplicates_dict = self.cnn_encoder.find_duplicates(encoding_map=self.img_inc_dict,
                                                            min_similarity_threshold=1.0)
 
         self.exact_duplicates_dict = self._remove_symmetric_duplicates(raw_exact_duplicates_dict)
-        logging.info("Exact duplicate detection completed.")
+        ic("Exact duplicate detection completed.")
 
         return self.exact_duplicates_dict
 
@@ -56,30 +58,31 @@ class DuplicateDetector:
         Find near duplicates using perceptual hashing.
         """
         try:
-            logging.info("Starting near duplicate detection...")
+            ic("Starting near duplicate detection...")
             image_encoding_dict = self.img_inc_dict.copy()
             if self.exact_duplicates_dict is None:
                 self.exact_duplicates_dict = self.get_exact_duplicates()
                 image_encoding_dict = self.img_inc_dict.copy()
 
-            for key_image, list_duplicates in tqdm(self.exact_duplicates_dict.items(),
-                                                   desc="Removing exact duplicates"):
+            for key_image, list_duplicates in self.exact_duplicates_dict.items():
                 for dup_image in list_duplicates:
                     del image_encoding_dict[dup_image]
 
-            hasher = CNN()
-            raw_near_duplicates_dict = hasher.find_duplicates(encoding_map=image_encoding_dict,
+            # hasher.logger.setLevel(logging.CRITICAL)
+            # raw_near_duplicates_dict = hasher.find_duplicates(encoding_map=image_encoding_dict,
+            #                                                   min_similarity_threshold=0.8)
+            # self.cnn_encoder.logger.setLevel(logging.CRITICAL)
+            raw_near_duplicates_dict = self.cnn_encoder.find_duplicates(encoding_map=image_encoding_dict,
                                                               min_similarity_threshold=0.8)
             near_duplicates_dict = self._remove_symmetric_duplicates(raw_near_duplicates_dict)
-            logging.info("Near duplicate detection completed.")
+            ic("Near duplicate detection completed.")
         except Exception as e:
-            logging.error(f"Error finding near duplicates: {e}")
+            ic(f"Error finding near duplicates: {e}")
             raise
 
         return near_duplicates_dict
 
-    @staticmethod
-    def _remove_symmetric_duplicates(duplicates_dict: dict) -> dict:
+    def _remove_symmetric_duplicates(self, duplicates_dict: dict) -> dict:
         """
         Remove symmetric duplicates from the duplicates dictionary.
         :arg duplicates_dict: A dictionary containing the duplicates.
@@ -97,7 +100,7 @@ class DuplicateDetector:
                         processed_images.add(key_image)
                         processed_images.update(filtered_list_duplicates)
         except Exception as e:
-            logging.error(f"Error removing symmetric duplicates: {e}")
+            ic(f"Error removing symmetric duplicates: {e}")
             raise
 
         return filtered_duplicates
@@ -110,25 +113,25 @@ class DuplicateDetector:
         image_encoding_dict = {}
 
         try:
-            logging.info("Generating image encodings...")
+            ic("Generating image encodings...")
 
             if num_images < 100:
-                for img_meta in tqdm(self.images.items(), desc="Encoding images"):
+                for img_meta in tqdm(self.images.items(), desc="generating image encoding"):
                     image_path, image_encoding = self._compute_cnn_encoding(img_meta)
                     image_encoding_dict[image_path] = image_encoding
             else:
                 with ThreadPoolExecutor(max_workers=4) as executor:
-                    image_encoding_dict = dict(tqdm(executor.map(self._compute_cnn_encoding, self.images.items()),
-                                                    total=num_images, desc="Encoding images in parallel"))
-            logging.info("Image encoding generation completed.")
+                    image_encoding_dict = dict(
+                        tqdm(executor.map(self._compute_cnn_encoding, self.images.items()), desc="Encoding images in parallel", total=num_images))
+            ic("Image encoding generation completed.")
         except Exception as e:
-            logging.error(f"Error generating image encodings: {e}")
+            ic(f"Error generating image encodings: {e}")
             raise
 
         return image_encoding_dict
 
-    @staticmethod
-    def _compute_dhash_encoding(img_meta):
+
+    def _compute_dhash_encoding(self, img_meta):
         """
         Compute hash for a file.
         """
@@ -136,22 +139,23 @@ class DuplicateDetector:
             image_path, image_stream = img_meta
             image_array = np.asarray(Image.open(image_stream))
             dhash = DHash()
+            
             return image_path, dhash.encode_image(image_array)
         except Exception as e:
-            logging.error(f"Error computing dhash encoding: {e}")
+            ic(f"Error computing dhash encoding: {e}")
             raise
 
-    @staticmethod
-    def _compute_cnn_encoding(img_meta):
+    def _compute_cnn_encoding(self, img_meta):
         """
         Compute hash for a file.
         """
         try:
             image_path, image_stream = img_meta
             image_array = np.array(Image.open(image_stream))
-            cnn_encoder = CNN()
-            image_encoding = cnn_encoder.encode_image(image_array=image_array)[0]
+            # cnn_encoder = CNN()
+            # cnn_encoder.logger.setLevel(logging.CRITICAL)
+            image_encoding = self.cnn_encoder.encode_image(image_array=image_array)[0]
             return image_path, image_encoding
         except Exception as e:
-            logging.error(f"Error computing cnn encoding: {e}")
+            ic(f"Error computing cnn encoding: {e}")
             raise
