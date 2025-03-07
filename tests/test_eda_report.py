@@ -4,8 +4,17 @@ from viz_scout.eda_report import EDAReport
 
 
 def test_generate_eda_report():
-    dataset_path = "sample_datasets/coco5"
-    report_generator = EDAReport(dataset_path=dataset_path, duplicate_check=True)
+    minio_config = {
+        "endpoint": "10.11.0.5:9000",
+        "access_key": "minioadmin",
+        "secret_key": "minioadmin",
+        "secure":False,
+        "bucket":"rohan"
+    }
+    
+    # report_generator = EDAReport(dataset_path="sample_datasets/coco5", duplicate_check=True, store="local")
+    report_generator = EDAReport(dataset_path="1054/images", duplicate_check=True, store="minio", minio_config=minio_config)
+
 
     report = report_generator.generate_report()
     ic.enable()

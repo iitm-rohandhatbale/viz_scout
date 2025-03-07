@@ -3,7 +3,16 @@ from viz_scout import DuplicateDetector
 
 
 def test_get_exact_duplicates():
-    detector = DuplicateDetector(dataset_path="sample_datasets/coco20")
+    minio_config = {
+        "endpoint": "10.11.0.5:9000",
+        "access_key": "minioadmin",
+        "secret_key": "minioadmin",
+        "secure":False,
+        "bucket":"rohan"
+    }
+
+    detector = DuplicateDetector(dataset_path="1054/images", store="minio", minio_config=minio_config)
+    # detector = DuplicateDetector(dataset_path="sample_datasets/coco20", store="local")
 
     exact_duplicates = detector.get_exact_duplicates()
     near_duplicates = detector.get_near_duplicates()

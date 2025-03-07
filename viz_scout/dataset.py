@@ -10,7 +10,7 @@ from .corruption import CorruptionDetector
 
 
 class DatasetLoader:
-    def __init__(self, source, minio_config=None, s3_config=None):
+    def __init__(self, source, minio_config=None, s3_config=None, store="local"):
         """
         Initialize the dataset loader.
 
@@ -19,8 +19,10 @@ class DatasetLoader:
             source (str): Path to the dataset, can be local path or S3/MinIO URI.
             minio_config (dict): MinIO configuration with keys: endpoint, access_key, secret_key.
             s3_config (dict): S3 configuration with keys: bucket, access_key, secret_key, region.
+            store (str): Store type, can be "local", "s3", or "minio".
         """
         self.source = source
+        self.store = store
         self.minio_config = minio_config
         self.s3_config = s3_config
         self.corruption_detcetor = CorruptionDetector()
@@ -143,7 +145,7 @@ class DatasetLoader:
                     
 
             ic(f"Successfully loaded {len(files)} images from MinIO bucket.")
-            return (files, None)
+            return (files, corrupt_images)
         except Exception as e:
             ic(f"Error loading images from MinIO: {e}")
             raise
@@ -159,7 +161,7 @@ class DatasetLoader:
         try:
             if self.source.startswith("s3://"):
                 return self._load_from_s3()
-            elif self.source.startswith("minio://"):
+            elif self.store == "minio":
                 return self._load_from_minio()
             else:
                 return self._load_from_local()

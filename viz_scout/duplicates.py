@@ -13,7 +13,7 @@ from .dataset import DatasetLoader
 ic.disable()
 
 class DuplicateDetector:
-    def __init__(self, images=None, dataset_path=None, minio_config=None, s3_config=None):
+    def __init__(self, images=None, dataset_path=None, minio_config=None, s3_config=None, store="local"):
         if not images and not dataset_path:
             raise ValueError("Either 'images (dict)' or 'dataset_path (string, s3 link, minio link)' must be provided.")
 
@@ -25,7 +25,7 @@ class DuplicateDetector:
 
         if dataset_path:
             self.images, _ = DatasetLoader(source=dataset_path, s3_config=s3_config,
-                                        minio_config=minio_config).load_images()
+                                        minio_config=minio_config, store=store).load_images()
         self.img_inc_dict = None
         self.exact_duplicates_dict = None
         self.cnn_encoder = CNN()

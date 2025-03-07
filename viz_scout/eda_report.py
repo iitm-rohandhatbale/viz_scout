@@ -12,7 +12,7 @@ from .dataset import DatasetLoader
 
 class EDAReport:
     def __init__(self, dataset_path, minio_config=None, s3_config=None, duplicate_check=False, blur_threshold=3,
-                 batch_size=100, num_workers=4):
+                 batch_size=100, num_workers=4, store="local"):
         """
         Initialize the EDA Report Generator with optimizations for large datasets.
 
@@ -25,6 +25,7 @@ class EDAReport:
             blur_threshold (int): Threshold to classify blur score.
             batch_size (int): Number of images to process in each batch.
             num_workers (int): Number of parallel workers (threads) to process images concurrently.
+            store (str): Store type, can be "local", "s3", or "minio".
         """
         self.dataset_path = dataset_path
         self.minio_config = minio_config
@@ -37,7 +38,7 @@ class EDAReport:
 
         # Load the dataset
         ic(f"Loading dataset from {self.dataset_path}...")
-        self.loader = DatasetLoader(dataset_path, minio_config, s3_config)
+        self.loader = DatasetLoader(dataset_path, minio_config, s3_config, store)
         self.images, self.corrupt_images = self.loader.load_images()
         ic(f"Loaded {len(self.images)} images.")
 

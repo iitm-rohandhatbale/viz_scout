@@ -3,9 +3,17 @@ from viz_scout.dataset import DatasetLoader
 
 
 def test_dataset_loader():
-    dataset_path = "sample_datasets/coco5"
+    dataset_path = "1054/images"
 
-    dataset_loader = DatasetLoader(source=dataset_path)
+    minio_config = {
+        "endpoint": "10.11.0.5:9000",
+        "access_key": "minioadmin",
+        "secret_key": "minioadmin",
+        "secure":False,
+        "bucket":"rohan"
+    }
+
+    dataset_loader = DatasetLoader(source=dataset_path, store="minio", minio_config=minio_config)
     images, corrupt_images= dataset_loader.load_images()
 
     ic.enable()
