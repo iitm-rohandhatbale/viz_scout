@@ -1,4 +1,5 @@
 import os
+from reprlib import recursive_repr
 import boto3
 
 from icecream import ic
@@ -114,17 +115,32 @@ class DatasetLoader:
 
             bucket = self.minio_config["bucket"]
             ic(f"Listing objects in MinIO bucket: {bucket}")
-            objects = client.list_objects(bucket, recursive=True)
+            objects = client.list_objects(bucket, prefix=self.source, recursive=True)
+            
             files = {}
+            corrupt_images = []
 
             for obj in tqdm(objects, desc="Streaming images from MinIO"):
                 key = obj.object_name
                 if key.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
+                    try:
                     # Stream the file directly from MinIO
-                    file_stream = BytesIO()
-                    client.fget_object(bucket, key, file_stream)
-                    file_stream.seek(0)
-                    files[key] = file_stream
+                        response = client.get_object(bucket, key)
+                        file_stream = BytesIO(response.read())
+                        file_stream.seek(0)
+                        
+                        # Corruption check
+                        if not self.corruption_detcetor.is_corrupt(file_stream):
+                            files[key] = file_stream
+                        else:
+                            corrupt_images.append(key)
+                            
+                        response.close()
+                        response.release_conn()
+                    except Exception as file_error:
+                        ic(f"Error loading file {key}: {file_error}")
+                        corrupt_images.append(key)
+                    
 
             ic(f"Successfully loaded {len(files)} images from MinIO bucket.")
             return (files, None)

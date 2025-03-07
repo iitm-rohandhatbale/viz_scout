@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="viz_scout",  
-    version="0.2.4",  
+    version="0.2.5",  
     author="Rohan Dhatbale",
     author_email="rohandhatbale@gmail.com",
     description="A Python toolkit for end-to-end image analysis with cloud (Minio, S3) support.",
