@@ -5,7 +5,7 @@ from viz_scout.eda_report import EDAReport
 
 def test_generate_eda_report():
     minio_config = {
-        "endpoint": "10.11.0.5:9000",
+        "endpoint": "<IP>:9000",
         "access_key": "minioadmin",
         "secret_key": "minioadmin",
         "secure":False,

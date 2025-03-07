@@ -4,7 +4,7 @@ from viz_scout import DuplicateDetector
 
 def test_get_exact_duplicates():
     minio_config = {
-        "endpoint": "10.11.0.5:9000",
+        "endpoint": "<IP>:9000",
         "access_key": "minioadmin",
         "secret_key": "minioadmin",
         "secure":False,

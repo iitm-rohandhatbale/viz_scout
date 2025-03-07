@@ -6,7 +6,7 @@ def test_dataset_loader():
     dataset_path = "1054/images"
 
     minio_config = {
-        "endpoint": "10.11.0.5:9000",
+        "endpoint": "<IP>:9000",
         "access_key": "minioadmin",
         "secret_key": "minioadmin",
         "secure":False,
