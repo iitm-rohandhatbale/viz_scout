@@ -1,5 +1,6 @@
 import os
 import json
+import numpy as np
 import pandas as pd
 from icecream import ic
 from tqdm import tqdm
@@ -35,6 +36,16 @@ class EDAReport:
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.data_df = None
+        self.aspect_ratio_outlier_method = "percentile" # std or percentile
+        self.aspect_ratio_std_threshold = 3
+        self.aspect_ratio_lower_percentile = 5
+        self.aspect_ratio_upper_percentile = 95
+        self.size_outlier_method = "percentile" # std or percentile
+        self.size_std_threshold = 3
+        self.size_lower_percentile = 5
+        self.size_upper_percentile = 95
+        
+        self.image_stats_dict = {"img_name": [], "img_width": [], "img_height": [], "img_size_kb": []}
 
         # Load the dataset
         ic(f"Loading dataset from {self.dataset_path}...")
@@ -67,6 +78,23 @@ class EDAReport:
             ic("Processing image-level statistics in parallel...")
             # Image-level statistics with parallel processing
             image_stats = self._get_image_stats_parallel()
+        
+        ic("Filtering outliers...")
+        # Filter outliers
+        filtered_aspect_ratio_images = self._filter_aspect_ratio_outliers(
+            method=self.aspect_ratio_outlier_method,
+            threshold=self.aspect_ratio_std_threshold,
+            lower_percentile=self.aspect_ratio_lower_percentile,
+            upper_percentile=self.aspect_ratio_upper_percentile
+        )
+        filtered_size_images = self._filter_size_outliers(
+            method=self.size_outlier_method,
+            threshold=self.size_std_threshold,
+            lower_percentile=self.size_lower_percentile,
+            upper_percentile=self.size_upper_percentile
+        )
+        dataset_stats["aspect_ratio_outliers"] = filtered_aspect_ratio_images
+        dataset_stats["size_outliers"] = filtered_size_images
 
         report = {
             "dataset_stats": dataset_stats,
@@ -166,6 +194,7 @@ class EDAReport:
         img_path, img_stream = img_meta
         width = "NA"
         height = "NA"
+        num_channels = "NA"
         brightness = "NA"
         blur = "NA"
         uniformity = "NA"
@@ -179,6 +208,7 @@ class EDAReport:
             if not corrupt:
                 pil_image = Image.open(img_stream)
                 width, height = pil_image.size
+                num_channels = len(pil_image.getbands())
 
                 # Calculate brightness, blur, and uniformity scores
                 brightness = self.quality_analyzer.brightness_score(img_stream)
@@ -190,12 +220,18 @@ class EDAReport:
 
                 # find file size
                 file_size = img_stream.getbuffer().nbytes / 1024  # KB
+                
+                self.image_stats_dict["img_name"].append(img_path)
+                self.image_stats_dict["img_width"].append(width)
+                self.image_stats_dict["img_height"].append(height)
+                self.image_stats_dict["img_size_kb"].append(file_size)
 
             return {
                 "filename": img_path,
                 "file_size": file_size,
                 "img_width": width,
                 "img_height": height,
+                "num_channels": num_channels,
                 "brightness_score": brightness,
                 "blur_score": blur,
                 "uniformity_score": uniformity,
@@ -207,6 +243,79 @@ class EDAReport:
                 "filename": img_path,
                 "error": str(e)
             }
+    
+    def _filter_aspect_ratio_outliers(self, method="std", threshold=2, lower_percentile=5, upper_percentile=95):
+        """
+        Filter out images with aspect ratios outside the threshold.
+
+
+        Args:
+            method (str): Method to use for filtering, can be "std" or "percentile".
+            threshold (float): Threshold value for filtering.
+            lower_percentile (float): Lower percentile for filtering.
+            upper_percentile (float): Upper percentile for filtering.
+
+        Returns:
+            pd.DataFrame: Filtered DataFrame.
+        """
+        img_names = self.image_stats_dict["img_name"]
+        widths = np.array(self.image_stats_dict["img_width"])
+        heights = np.array(self.image_stats_dict["img_height"])
+
+        # Compute aspect ratios
+        aspect_ratios = widths / heights
+        
+        if method not in ["std", "percentile"]:
+            ic("Invalid method, using default 'std' method.")
+            method = "std"
+
+        if method == "std":
+            mean_ar = np.mean(aspect_ratios)
+            std_ar = np.std(aspect_ratios)
+            lower_bound, upper_bound = mean_ar - threshold * std_ar, mean_ar + threshold * std_ar
+
+        elif method == "percentile":
+            lower_bound, upper_bound = np.percentile(aspect_ratios, [lower_percentile, upper_percentile])
+
+        # Identify outlier image names
+        outlier_names = [name for name, ar in zip(img_names, aspect_ratios) if ar < lower_bound or ar > upper_bound]
+
+        return outlier_names
+
+    def _filter_size_outliers(self, method="std", threshold=2, lower_percentile=5, upper_percentile=95):
+        """
+        Filter out images with file sizes outside the threshold.
+
+
+        Args:
+            method (str): Method to use for filtering, can be "std" or "percentile".
+            threshold (float): Threshold value for filtering.
+            lower_percentile (float): Lower percentile for filtering.
+            upper_percentile (float): Upper percentile for filtering.
+
+        Returns:
+            pd.DataFrame: Filtered DataFrame.
+        """
+        img_names = self.image_stats_dict["img_name"]
+        sizes = np.array(self.image_stats_dict["img_size_kb"])
+        
+        if method not in ["std", "percentile"]:
+            ic("Invalid method, using default 'std' method.")
+            method = "std"
+
+        if method == "std":
+            mean_size = np.mean(sizes)
+            std_size = np.std(sizes)
+            lower_bound, upper_bound = mean_size - threshold * std_size, mean_size + threshold * std_size
+
+        elif method == "percentile":
+            lower_bound, upper_bound = np.percentile(sizes, [lower_percentile, upper_percentile])
+
+        # Identify outlier image names
+        outlier_names = [name for name, size in zip(img_names, sizes) if size < lower_bound or size > upper_bound]
+
+        return outlier_names
+
 
     @staticmethod
     def save_report(report, output_path="eda_report.json"):

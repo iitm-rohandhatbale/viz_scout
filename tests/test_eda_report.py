@@ -12,8 +12,8 @@ def test_generate_eda_report():
         "bucket":"rohan"
     }
     
-    # report_generator = EDAReport(dataset_path="sample_datasets/coco5", duplicate_check=True, store="local")
-    report_generator = EDAReport(dataset_path="1054/images", duplicate_check=True, store="minio", minio_config=minio_config)
+    report_generator = EDAReport(dataset_path="sample_datasets/coco20", duplicate_check=False, store="local")
+    # report_generator = EDAReport(dataset_path="1054/images", duplicate_check=True, store="minio", minio_config=minio_config)
 
 
     report = report_generator.generate_report()
